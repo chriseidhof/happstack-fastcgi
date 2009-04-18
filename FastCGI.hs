@@ -11,7 +11,9 @@ import qualified Data.Map as M
 import Network.URI
 import Control.Applicative
 import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString.UTF8 as UBS
 import Data.List (isPrefixOf)
+import Data.Char (toLower)
 
 numThreads :: Int
 numThreads = 10
@@ -54,17 +56,25 @@ cgiMethod :: CGIRequest -> Method
 cgiMethod x   = withDef GET $ (x ? "HTTP_METHOD") >>= maybeRead
 cgiPaths      = split '/' . str "SCRIPT_NAME"
 cgiQuery    x = '?':(str "QUERY_STRING" x)
-cgiInputs :: CGI [(String, Input)]
 cgiInputs     = getInputNames >>= mapM toHappstackInput
 cgiCookies    = map cookieWithName . either (const []) id . parseCookies . str "HTTP_COOKIE"
 cgiVersion    = parseProtocol . str "SERVER_PROTOCOL"
-cgiHeaders    = map toHeader . filter (isPrefixOf "HTTP" . fst) . M.toList . cgiVars
+cgiHeaders :: CGIRequest -> Headers
+cgiHeaders  = M.mapKeys (UBS.fromString . map toLower)
+            . M.mapWithKey toHeaderPair
+            . M.mapKeys (drop (length httpStart))
+            . filterKey (isPrefixOf httpStart) 
+            . cgiVars
 cgiBody    rq = undefined
 cgiPeer    rq = undefined
 
-toHeader = undefined
+httpStart = "HTTP_"
+
+toHeaderPair k v = HeaderPair (UBS.fromString k) [UBS.fromString v]
 
 cookieWithName x = (H.cookieName x, x)
+
+filterKey f = M.filterWithKey (\x y -> f x)
 
 parseProtocol "HTTP/0.9" = Version 0 9
 parseProtocol "HTTP/1.0" = Version 1 0
