@@ -1,6 +1,14 @@
--- | Running Happstack applications using FastCGI
--- | 
--- | TODO: explanation of how to use this
+{- | 
+Running Happstack applications using FastCGI
+    
+You need to keep a couple things in mind when configuring a FastCGI Happstack application, especially when using Happstack-state.
+
+There are several ways to let Apache + FastCGI handle your application.
+
+[Dynamic] This is the easy way.  You don't have to configure your server, but can just execute the scripts.  FastCGI will spawn instances of your application if needed and kill them if they're not needed anymore.  /This might break working with Happstack-state!/
+
+[Static] You explicitly need to configure your script in your host config.  By default it will only start one process, on server startup.  If you want to work with Happstack-state, this is the preferable way, although we have not exhaustively tested that it won't break.
+| -} 
 module Happstack.Server.FastCGI (happstackToCGI) where
 
 import Control.Applicative
