@@ -9,7 +9,11 @@ There are several ways to let Apache + FastCGI handle your application.
 
 [Static] You explicitly need to configure your script in your host config.  By default it will only start one process, on server startup.  If you want to work with Happstack-state, this is the preferable way, although we have not exhaustively tested that it won't break.
 | -} 
-module Happstack.Server.FastCGI (happstackToCGI) where
+module Happstack.Server.FastCGI 
+    ( module Network.FastCGI
+    , happstackToCGI
+    ) 
+    where
 
 import Control.Applicative
 import Data.Char (toLower)
