@@ -2,7 +2,7 @@ module Happstack.Server.FastCGI where
 
 import Network.FastCGI
 import qualified Network.CGI as CGI
-import Network.CGI.Monad (CGIRequest, cgiVars)
+import Network.CGI.Monad (CGIRequest, cgiVars, cgiRequestBody, cgiGet)
 import Network.CGI.Protocol (maybeRead)
 import Happstack.Server hiding (processRequest)
 import Happstack.Server.HTTP.Types (Request (..), Version (Version))
@@ -22,7 +22,23 @@ runServer :: (ToMessage b) => ServerPartT IO b -> IO ()
 runServer = runFastCGIConcurrent numThreads . convert . processRequest
 
 convert :: (Request -> IO Response) -> CGI CGIResult
-convert f = undefined
+convert f = do
+  cgiReq <- cgiGet id
+  q <- toHappstackRequest cgiReq
+  resp <- liftIO (f q)
+  toCGIResponse resp
+
+toCGIResponse :: Response -> CGI CGIResult
+toCGIResponse r = do
+  -- todo rsflags
+  --      rscode
+  --      rsvalidator?
+  mapM_ setHappstackHeader (M.elems $ rsHeaders r)
+  outputFPS (rsBody r)
+
+setHappstackHeader :: HeaderPair -> CGI ()
+setHappstackHeader (HeaderPair k v) = do
+  mapM_ (CGI.setHeader (UBS.toString k) . UBS.toString) v
 
 toHappstackRequest :: CGIRequest -> CGI Request
 toHappstackRequest rq = do
@@ -60,13 +76,13 @@ cgiInputs     = getInputNames >>= mapM toHappstackInput
 cgiCookies    = map cookieWithName . either (const []) id . parseCookies . str "HTTP_COOKIE"
 cgiVersion    = parseProtocol . str "SERVER_PROTOCOL"
 cgiHeaders :: CGIRequest -> Headers
-cgiHeaders  = M.mapKeys (UBS.fromString . map toLower)
-            . M.mapWithKey toHeaderPair
-            . M.mapKeys (drop (length httpStart))
+cgiHeaders  = mkHeaders 
+            . mapKeys   (drop (length httpStart))
             . filterKey (isPrefixOf httpStart) 
+            . M.toList
             . cgiVars
-cgiBody    rq = undefined
-cgiPeer    rq = undefined
+cgiBody    = Body . cgiRequestBody
+cgiPeer  _ = undefined -- TODO
 
 httpStart = "HTTP_"
 
@@ -74,7 +90,8 @@ toHeaderPair k v = HeaderPair (UBS.fromString k) [UBS.fromString v]
 
 cookieWithName x = (H.cookieName x, x)
 
-filterKey f = M.filterWithKey (\x y -> f x)
+mapKeys   f = map (\(k,v) -> (f k, v))
+filterKey f = filter (f . fst)
 
 parseProtocol "HTTP/0.9" = Version 0 9
 parseProtocol "HTTP/1.0" = Version 1 0
@@ -87,14 +104,6 @@ toHappstackInput k = do
   filename <- getInputFilename k
   contentType <- withDef "" <$> getInputContentType k
   return $ (,) k $ Input {inputValue = value, inputFilename = filename, inputContentType = convertContentType $ parseContentType contentType }
--- toHAppSInput (k,v) = Input { inputValue = CGI.inputValue inp
---                          , inputFilename = CGI.inputFilename inp
---                          , inputContentType =HAppS.ContentType
---                                               { HAppS.ctType = CGI.ctType (CGI.inputContentType inp)
---                                               , HAppS.ctSubtype = CGI.ctSubtype (CGI.inputContentType inp)
---                                               , HAppS.ctParameters = CGI.ctParameters (CGI.inputContentType inp)
---                                               }
---                          }
 
 convertContentType Nothing                        = error "No correct content-type"
 convertContentType (Just (CGI.ContentType x y z)) = H.ContentType x y z
