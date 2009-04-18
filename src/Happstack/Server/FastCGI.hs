@@ -31,7 +31,7 @@ import qualified Network.CGI as CGI
 
 
 -- | Converts a Happstack ServerPartT to a CGI handling function.
-serverPartToCGI ::(ToMessage b) => ServerPartT IO b -> CGI CGIResult
+serverPartToCGI :: (ToMessage b) => ServerPartT IO b -> CGI CGIResult
 serverPartToCGI = convert . processRequest
 
 
