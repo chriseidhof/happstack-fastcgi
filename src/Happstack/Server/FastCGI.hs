@@ -163,8 +163,10 @@ processRequest hs req =  (runWebT $ runServerPartT hs req) >>= (return . (maybe 
         standardNotFound = H.setHeader "Content-Type" "text/html" $ toResponse "Not found"
 
 
+--------------------------------------------------
+-- Copied straight from Lemmih's old happs-fastcgi
+--------------------------------------------------
 
--- TODO: copied straight from Lemmih's old happs-fastcgi
 responseMessage :: Int -> [Char]
 responseMessage 100 = "100 Continue"
 responseMessage 101 = "101 Switching Protocols"
