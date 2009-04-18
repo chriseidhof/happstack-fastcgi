@@ -11,7 +11,7 @@ There are several ways to let Apache + FastCGI handle your application.
 | -} 
 module Happstack.Server.FastCGI 
     ( module Network.FastCGI
-    , happstackToCGI
+    , serverPartToCGI
     ) 
     where
 
@@ -31,8 +31,8 @@ import qualified Network.CGI as CGI
 
 
 -- | Converts a Happstack ServerPartT to a CGI handling function.
-happstackToCGI ::(ToMessage b) => ServerPartT IO b -> CGI CGIResult
-happstackToCGI = convert . processRequest
+serverPartToCGI ::(ToMessage b) => ServerPartT IO b -> CGI CGIResult
+serverPartToCGI = convert . processRequest
 
 
 convert :: (Request -> IO Response) -> CGI CGIResult
