@@ -1,7 +1,19 @@
--- | Running Happstack applications using FastCGI
--- | 
--- | TODO: explanation of how to use this
-module Happstack.Server.FastCGI (happstackToCGI) where
+{- | 
+Running Happstack applications using FastCGI
+    
+You need to keep a couple things in mind when configuring a FastCGI Happstack application, especially when using Happstack-state.
+
+There are several ways to let Apache + FastCGI handle your application.
+
+[Dynamic] This is the easy way.  You don't have to configure your server, but can just execute the scripts.  FastCGI will spawn instances of your application if needed and kill them if they're not needed anymore.  /This might break working with Happstack-state!/
+
+[Static] You explicitly need to configure your script in your host config.  By default it will only start one process, on server startup.  If you want to work with Happstack-state, this is the preferable way, although we have not exhaustively tested that it won't break.
+| -} 
+module Happstack.Server.FastCGI 
+    ( module Network.FastCGI
+    , serverPartToCGI
+    ) 
+    where
 
 import Control.Applicative
 import Data.Char (toLower)
@@ -19,8 +31,8 @@ import qualified Network.CGI as CGI
 
 
 -- | Converts a Happstack ServerPartT to a CGI handling function.
-happstackToCGI ::(ToMessage b) => ServerPartT IO b -> CGI CGIResult
-happstackToCGI = convert . processRequest
+serverPartToCGI :: (ToMessage b) => ServerPartT IO b -> CGI CGIResult
+serverPartToCGI = convert . processRequest
 
 
 convert :: (Request -> IO Response) -> CGI CGIResult
@@ -151,8 +163,10 @@ processRequest hs req =  (runWebT $ runServerPartT hs req) >>= (return . (maybe 
         standardNotFound = H.setHeader "Content-Type" "text/html" $ toResponse "Not found"
 
 
+--------------------------------------------------
+-- Copied straight from Lemmih's old happs-fastcgi
+--------------------------------------------------
 
--- TODO: copied straight from Lemmih's old happs-fastcgi
 responseMessage :: Int -> [Char]
 responseMessage 100 = "100 Continue"
 responseMessage 101 = "101 Switching Protocols"
