@@ -3,7 +3,7 @@ Version: 0.1
 Copyright: Tupil
 Maintainer: ce@tupil.com
 License: BSD3
-build-type: simple
+build-type: Simple
 build-depends: base>=2.0, cgi >= 3000.0.0, fastcgi >= 3001.0.2, mtl, happstack-server, containers >= 0.2.0, utf8-string >= 0.3.4, bytestring
 Synopsis: Happstack extension for use with FastCGI.
 Description:
