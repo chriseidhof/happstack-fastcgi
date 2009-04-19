@@ -88,7 +88,7 @@ cgiMethod :: CGIRequest -> Method
 cgiMethod x = withDef GET $ (x ? "HTTP_METHOD") >>= maybeRead
 
 cgiPaths :: CGIRequest -> [String]
-cgiPaths = split '/' . str "SCRIPT_NAME"
+cgiPaths = split '/' . str "PATH_INFO"
 
 cgiQuery :: CGIRequest -> String
 cgiQuery    x = '?':(str "QUERY_STRING" x)
