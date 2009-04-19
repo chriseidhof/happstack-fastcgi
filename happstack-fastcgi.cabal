@@ -1,7 +1,7 @@
 Name: happstack-fastcgi
 Version: 0.1.1
 Copyright: Tupil
-Maintainer: ce@tupil.com, eml@tupil.com
+Maintainer: ce [at] tupil.com, eml [at] tupil.com
 License: BSD3
 license-file: COPYING
 build-type: Simple
