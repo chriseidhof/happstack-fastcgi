@@ -78,7 +78,7 @@ r ? k = M.lookup k $ cgiVars r
 -- | Like fromJust, but with a default value in case of Nothing.
 withDef x = maybe x id
 
--- | Look up a String in the cgiVars, returning "" if the key isn't present
+-- | Look up a String in the cgiVars, returning the empty string if the key is not present
 str k v   = withDef "" (v ? k)
 
 cgiUri :: CGIRequest -> String
