@@ -15,7 +15,6 @@ module Happstack.Server.FastCGI
     ) 
     where
 
-import Codec.Binary.UTF8.String
 import Control.Applicative
 import Data.Char (toLower)
 import Data.List (isPrefixOf)
@@ -29,7 +28,6 @@ import qualified Data.ByteString.UTF8 as UBS
 import qualified Data.Map as M
 import qualified Happstack.Server as H
 import qualified Network.CGI as CGI
-
 
 -- | Converts a Happstack ServerPartT to a CGI handling function.
 serverPartToCGI :: (ToMessage b) => ServerPartT IO b -> CGI CGIResult
@@ -79,7 +77,7 @@ r ? k = M.lookup k $ cgiVars r
 withDef x = maybe x id
 
 -- | Look up a String in the cgiVars, returning the empty string if the key is not present, also does UTF8 decoding
-str k v   = withDef "" (v ? k >>= return . decodeString)
+str k v   = withDef "" (v ? k)
 
 -- | Append if the list is not empty
 x ?: [] = []
