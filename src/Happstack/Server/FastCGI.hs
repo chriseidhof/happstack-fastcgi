@@ -89,7 +89,7 @@ cgiUri :: CGIRequest -> String
 cgiUri x = str "PATH_INFO" x ++ cgiQuery x
 
 cgiMethod :: CGIRequest -> Method
-cgiMethod x = withDef GET $ (x ? "HTTP_METHOD") >>= maybeRead
+cgiMethod x = withDef GET $ (x ? "REQUEST_METHOD") >>= maybeRead
 
 cgiPaths :: CGIRequest -> [String]
 cgiPaths = split '/' . str "PATH_INFO"
