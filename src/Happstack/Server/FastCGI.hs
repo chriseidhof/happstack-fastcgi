@@ -81,8 +81,12 @@ withDef x = maybe x id
 -- | Look up a String in the cgiVars, returning the empty string if the key is not present
 str k v   = withDef "" (v ? k)
 
+-- | Append if the list is not empty
+x ?: [] = []
+x ?: xs = x : xs
+
 cgiUri :: CGIRequest -> String
-cgiUri = str "REQUEST_URI"
+cgiUri x = str "PATH_INFO" x ++ cgiQuery x
 
 cgiMethod :: CGIRequest -> Method
 cgiMethod x = withDef GET $ (x ? "HTTP_METHOD") >>= maybeRead
@@ -91,29 +95,29 @@ cgiPaths :: CGIRequest -> [String]
 cgiPaths = split '/' . str "PATH_INFO"
 
 cgiQuery :: CGIRequest -> String
-cgiQuery    x = '?':(str "QUERY_STRING" x)
+cgiQuery x = '?' ?: (str "QUERY_STRING" x)
 
 cgiInputs :: CGI [(String, Input)]
 cgiInputs = getInputNames >>= mapM toHappstackInput
 
 cgiCookies :: CGIRequest -> [(String, H.Cookie)]
-cgiCookies    = map cookieWithName . either (const []) id . parseCookies . str "HTTP_COOKIE"
+cgiCookies = map cookieWithName . either (const []) id . parseCookies . str "HTTP_COOKIE"
 
 cgiVersion :: CGIRequest -> Version
-cgiVersion    = parseProtocol . str "SERVER_PROTOCOL"
+cgiVersion = parseProtocol . str "SERVER_PROTOCOL"
 
 cgiHeaders :: CGIRequest -> Headers
-cgiHeaders  = mkHeaders 
-            . mapKeys   (replace '_' '-' . drop (length httpPrefix))
-            . filterKey (isPrefixOf httpPrefix) 
-            . M.toList
-            . cgiVars
+cgiHeaders = mkHeaders 
+           . mapKeys   (replace '_' '-' . drop (length httpPrefix))
+           . filterKey (isPrefixOf httpPrefix) 
+           . M.toList
+           . cgiVars
 
 cgiBody :: CGIRequest -> RqBody
-cgiBody    = Body . cgiRequestBody
+cgiBody = Body . cgiRequestBody
 
 cgiPeer :: CGIRequest -> (String, Int)
-cgiPeer  r = (str "REMOTE_ADDR" r, withDef 0 (r ? "REMOTE_PORT" >>= maybeRead)) -- TODO
+cgiPeer r = (str "REMOTE_ADDR" r, withDef 0 (r ? "REMOTE_PORT" >>= maybeRead)) -- TODO
 
 
 -- | Replace x by y in a map
